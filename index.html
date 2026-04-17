@@ -287,6 +287,10 @@
                     <div class="flex items-baseline gap-2">
                         <span id="score-counter"
                             class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-sky-400">0</span>
+                        <div id="rank-tag-mobile" class="md:hidden flex items-baseline gap-1 bg-blue-600 text-white px-3 py-1 rounded-full shadow-lg -translate-y-2 animate__animated scale-90">
+                            <span class="text-[8px] font-bold uppercase">RANK</span>
+                            <span id="rank-count-mobile" class="text-lg font-black">#--</span>
+                        </div>
                         <span id="potential-points"
                             class="text-blue-400 font-bold text-lg md:text-xl animate__animated animate__pulse animate__infinite">+150</span>
                     </div>
@@ -1121,6 +1125,22 @@
 
             if (playerIdx === -1) return;
             const currentRank = playerIdx + 1;
+
+            // Update Mobile Rank Display (Direct access for reliability)
+            const mobileRankCount = document.getElementById('rank-count-mobile');
+            const mobileRankTag = document.getElementById('rank-tag-mobile');
+            if (mobileRankCount && mobileRankTag) {
+                const oldRankText = mobileRankCount.innerText.replace('#', '');
+                mobileRankCount.innerText = `#${currentRank}`;
+                if (oldRankText !== '--') {
+                    const oldR = parseInt(oldRankText);
+                    if (currentRank < oldR) {
+                        mobileRankTag.classList.remove('animate__bounce');
+                        void mobileRankTag.offsetWidth;
+                        mobileRankTag.classList.add('animate__bounce');
+                    }
+                }
+            }
 
             // Re-render Leaderboard Rows
             dom.tower.innerHTML = '';
