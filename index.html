@@ -280,7 +280,7 @@
         <div class="flex-grow md:w-2/3 p-4 md:p-8 flex flex-col relative bg-white overflow-y-auto">
 
             <!-- Stats Header -->
-            <div class="flex justify-between items-start mb-6">
+            <div class="flex justify-between items-start mb-3 md:mb-4">
                 <div class="animate__animated animate__fadeInLeft">
                     <h2 class="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1">SCORE
                     </h2>
@@ -305,7 +305,7 @@
             </div>
 
             <!-- Timer -->
-            <div class="mb-6">
+            <div class="mb-3 md:mb-4">
                 <div class="flex justify-between text-[10px] text-slate-500 mb-2 font-bold uppercase tracking-widest">
                     <span>วิเคราะห์ข้อมูลภายใน</span>
                     <span id="time-text" class="text-blue-600">10s</span>
@@ -319,9 +319,9 @@
 
             <!-- Quiz Content -->
             <div id="quiz-wrapper" class="flex-grow flex flex-col justify-center animate__animated">
-                <div class="mb-3 md:mb-6">
+                <div class="mb-2 md:mb-3">
                     <div id="question-box"
-                        class="text-base md:text-xl font-semibold leading-relaxed text-slate-800 bg-blue-50/50 p-3 md:p-5 rounded-2xl md:rounded-3xl border border-blue-100 shadow-sm">
+                        class="text-base md:text-lg font-semibold leading-relaxed text-slate-800 bg-blue-50/50 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-blue-100 shadow-sm text-center">
                         Now loading...
                     </div>
                 </div>
@@ -338,8 +338,26 @@
                     <div class="w-full space-y-3">
                         <input type="text" id="reg-name" placeholder="ชื่อ-นามสกุล" class="reg-input">
                         <input type="text" id="reg-empid" placeholder="รหัสพนักงาน (ถ้ามี)" class="reg-input">
+                        <select id="reg-level" class="reg-input">
+                            <option value="" disabled selected>-- ระดับตำแหน่ง --</option>
+                            <option value="ลูกจ้าง/ผู้ปฏิบัติงาน">1. ลูกจ้าง/ผู้ปฏิบัติงาน</option>
+                            <option value="พนักงานระดับ 1-5">2. พนักงานระดับ 1-5</option>
+                            <option value="พนักงานระดับ 6-8">3. พนักงานระดับ 6-8</option>
+                            <option value="พนักงานระดับ 9-10">4. พนักงานระดับ 9-10</option>
+                        </select>
+                        <select id="reg-line" class="reg-input">
+                            <option value="" disabled selected>-- สายงาน --</option>
+                            <option value="สายงานผู้ว่าการ">1. สายงานผู้ว่าการ</option>
+                            <option value="สายงานบริหาร">2. สายงานบริหาร</option>
+                            <option value="สายงานการเงิน">3. สายงานการเงิน</option>
+                            <option value="สายงานแผนและพัฒนา">4. สายงานแผนและพัฒนา</option>
+                            <option value="สายงานบริการด้านตะวันออก">5. สายงานบริการด้านตะวันออก</option>
+                            <option value="สายงานบริการด้านตะวันตก">6. สายงานบริการด้านตะวันตก</option>
+                            <option value="สายงานผลิตน้ำ">7. สายงานผลิตน้ำ</option>
+                            <option value="สายงานวิศวกรรม">8. สายงานวิศวกรรม</option>
+                            <option value="สายงานเทคโนโลยีดิจิทัล">9. สายงานเทคโนโลยีดิจิทัล</option>
+                        </select>
                         <input type="text" id="reg-unit" placeholder="หน่วยงาน (เช่น สจข.กกต.)" class="reg-input">
-                        <input type="text" id="reg-dept" placeholder="สังกัด (เช่น รวก.(กอ))" class="reg-input">
                         <input type="text" id="reg-phone" placeholder="เบอร์ติดต่อ" class="reg-input">
                         <button id="reg-submit-btn" onclick="submitRegistration()"
                             class="w-full py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-xl transition-all mt-4">เข้าสู่ระบบ</button>
@@ -412,7 +430,7 @@
                             <tr>
                                 <th class="p-4">อันดับ</th>
                                 <th class="p-4">ชื่อ</th>
-                                <th class="p-4 hidden md:table-cell">สังกัด</th>
+                                <th class="p-4 hidden md:table-cell">หน่วยงาน</th>
                                 <th class="p-4 text-right">แต้ม</th>
                             </tr>
                         </thead>
@@ -610,6 +628,8 @@
             return s;
         };
 
+        const normalizePhone = (p) => String(p || "").replace(/\D/g, "").trim();
+
         // --- Game Logic ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzloNWNaZf2Jq12sW3zvzxD0ayQCl5otYSn85OvDRW9LFFtIeJh-nUGFJz29QcwYvz0Uw/exec";
 
@@ -620,8 +640,27 @@
             leaderboard: [],
             lastRivalName: "",
             lastRank: 999,
-            user: { name: "", empid: "", unit: "", dept: "", phone: "" },
-            survey: []
+            user: { name: "", empid: "", unit: "", phone: "", level: "", line: "" },
+            survey: [],
+            leaderboardLoaded: false
+        };
+
+        // Background Pre-fetch Promise
+        let leaderboardPromise = null;
+        const startLeaderboardFetch = () => {
+            console.log("Starting background fetch...");
+            leaderboardPromise = fetch(SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    state.leaderboardLoaded = true;
+                    console.log("Leaderboard loaded in background.");
+                    return data;
+                })
+                .catch(err => {
+                    console.warn("Background fetch failed:", err);
+                    state.leaderboardLoaded = true; // Mark as done to unblock UI
+                    return []; 
+                });
         };
 
         const dom = {
@@ -693,10 +732,12 @@
         async function submitRegistration() {
             const name = document.getElementById('reg-name').value.trim();
             const empid = document.getElementById('reg-empid').value.trim();
+            const level = document.getElementById('reg-level').value;
+            const line = document.getElementById('reg-line').value;
             const unit = document.getElementById('reg-unit').value.trim();
-            const dept = document.getElementById('reg-dept').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
-            if (!name || !unit || !dept || !phone) {
+
+            if (!name || !unit || !phone || !level || !line) {
                 alert("กรุณาระบุข้อมูลประกอบการวิเคราะห์ให้ครบถ้วน (ยกเว้นรหัสพนักงาน)");
                 return;
             }
@@ -709,29 +750,58 @@
                 localStorage.setItem('csp_guest_id_2026', finalEmpId);
             }
 
-            state.user = { name, empid: finalEmpId, unit, dept, phone };
+            state.user = { name, empid: finalEmpId, unit, phone, level, line };
             localStorage.setItem('csp_user_2026', JSON.stringify(state.user));
 
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             // --- History Check from Google Sheets ---
-            dom.loadingModal.classList.remove('hidden');
-            dom.loadingModal.classList.add('animate__fadeIn');
+            // --- Performance Optimized: Only show modal if data isn't ready ---
+            let bypassTimer = null;
+            if (!state.leaderboardLoaded) {
+                dom.loadingModal.classList.remove('hidden');
+                dom.loadingModal.classList.add('animate__fadeIn');
+                // Show a small bypass button after 10 seconds if still loading
+                bypassTimer = setTimeout(() => {
+                    const bypassBtn = document.createElement('button');
+                    bypassBtn.innerText = "การเชื่อมต่อช้า? คลิกเพื่อข้ามการตรวจสอบ";
+                    bypassBtn.className = "mt-4 text-[10px] text-blue-400 underline animate__fadeIn";
+                    bypassBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        console.warn("User bypassed strict check due to slowness.");
+                        state.leaderboardLoaded = true;
+                        proceedToStart();
+                    };
+                    dom.loadingModal.querySelector('.bg-white').appendChild(bypassBtn);
+                }, 10000);
+            }
 
             try {
-                const res = await fetch(SCRIPT_URL);
-                const leaderboard = await res.json();
+                const startTime = Date.now();
+                if (!leaderboardPromise) startLeaderboardFetch(); 
+                const leaderboard = await leaderboardPromise;
+                console.log(`Fetch wait time: ${Date.now() - startTime}ms`);
+                
                 state.leaderboard = leaderboard || [];
+                if (bypassTimer) clearTimeout(bypassTimer);
 
-                // --- Robust Matching Logic (Handles leading zeros like 00123 vs 123) ---
+                // --- Tiered Matching Logic (Performance Optimized) ---
+                const inputEmpidKey = normalizeId(empid);
+                const inputNameKey = String(name || "").trim().toLowerCase();
+                const inputPhoneKey = normalizePhone(phone);
+
                 const hasPlayed = state.leaderboard.some(entry => {
                     const sheetEmpid = normalizeId(entry.empid);
-                    const sheetName = String(entry.name || "").trim().toLowerCase();
-                    const inputEmpid = normalizeId(finalEmpId);
-                    const inputName = String(name || "").trim().toLowerCase();
+                    
+                    // 1. If Employee ID was provided, it's the primary key
+                    if (empid) {
+                        return sheetEmpid === inputEmpidKey;
+                    }
 
-                    if (!isGuest) return sheetEmpid === inputEmpid;
-                    return sheetName === inputName;
+                    // 2. If Guest (no ID provided), match by Name + Phone
+                    const sheetName = String(entry.name || "").trim().toLowerCase();
+                    const sheetPhone = normalizePhone(entry.phone);
+                    return sheetName === inputNameKey && sheetPhone === inputPhoneKey;
                 });
 
                 dom.loadingModal.classList.add('animate__fadeOut');
@@ -863,19 +933,40 @@
                     state.leaderboard = [{ name: state.user.name, empid: state.user.empid, unit: state.user.unit, score: 0 }];
                 }
 
-                // Add/Update current player
-                const inputId = normalizeId(state.user.empid);
-                const existingIdx = state.leaderboard.findIndex(u => normalizeId(u.empid) === inputId);
+                // Add/Update current player (Tiered check) - Performance Optimized
+                const inputNameKey = String(state.user.name || "").trim().toLowerCase();
+                const inputPhoneKey = normalizePhone(state.user.phone);
+                const inputEmpidKey = normalizeId(state.user.empid);
+                const isGuestId = String(state.user.empid).startsWith('GUEST_');
+
+                const existingIdx = state.leaderboard.findIndex(u => {
+                    if (!isGuestId) return normalizeId(u.empid) === inputEmpidKey;
+                    return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
+                });
+
                 if (existingIdx !== -1) {
                     // Initialize with previous best, or 0 if first time in session
                     state.leaderboard[existingIdx].score = state.leaderboard[existingIdx].score || 0;
                     state.leaderboard[existingIdx].name = state.user.name;
                     state.leaderboard[existingIdx].unit = state.user.unit;
+                    state.leaderboard[existingIdx].phone = state.user.phone;
                 } else {
-                    state.leaderboard.push({ name: state.user.name, empid: state.user.empid, unit: state.user.unit, score: 0 });
+                    state.leaderboard.push({
+                        name: state.user.name,
+                        empid: state.user.empid,
+                        unit: state.user.unit,
+                        phone: state.user.phone,
+                        score: 0
+                    });
                 }
                 state.leaderboard.sort((a, b) => b.score - a.score);
-                state.lastRank = state.leaderboard.findIndex(u => normalizeId(u.empid) === inputId) + 1;
+
+                // Use the same index logic for rank
+                const finalIdx = state.leaderboard.findIndex(u => {
+                    if (!isGuestId) return normalizeId(u.empid) === inputEmpidKey;
+                    return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
+                });
+                state.lastRank = finalIdx + 1;
             } catch (e) {
                 console.error("Leaderboard processing failed", e);
                 state.leaderboard = [{ name: state.user.name, empid: state.user.empid, score: 0 }];
@@ -919,7 +1010,7 @@
                 const options = currentQ.o || [];
                 [...options].sort(() => Math.random() - 0.5).forEach(opt => {
                     const btn = document.createElement('button');
-                    btn.className = "option-btn w-full text-left p-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 hover:text-blue-600 hover:border-blue-300 animate__animated animate__fadeInUp";
+                    btn.className = "option-btn w-full text-left p-3 md:p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 hover:text-blue-600 hover:border-blue-300 animate__animated animate__fadeInUp";
                     btn.innerText = opt;
                     btn.onclick = (e) => {
                         if (state.isAnswering) return;
@@ -984,9 +1075,17 @@
             }
             state.floor++; // Always move to next floor in infinite mode
 
-            // Update live leaderboard state
-            const inputId = normalizeId(state.user.empid);
-            const playerIdx = state.leaderboard.findIndex(u => normalizeId(u.empid) === inputId);
+            // Update live leaderboard state - Performance Optimized
+            const inputNameKey = String(state.user.name || "").trim().toLowerCase();
+            const inputPhoneKey = normalizePhone(state.user.phone);
+            const inputEmpidKey = normalizeId(state.user.empid);
+            const isGuestId = String(state.user.empid).startsWith('GUEST_');
+
+            const playerIdx = state.leaderboard.findIndex(u => {
+                if (!isGuestId) return normalizeId(u.empid) === inputEmpidKey;
+                return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
+            });
+
             if (playerIdx !== -1) {
                 // Use Math.max to ensure we capture the best score in the current session
                 state.leaderboard[playerIdx].score = Math.max(state.leaderboard[playerIdx].score || 0, Math.floor(state.score));
@@ -1010,8 +1109,16 @@
         }
 
         function updateTowerView() {
-            const inputId = normalizeId(state.user.empid);
-            const playerIdx = state.leaderboard.findIndex(u => normalizeId(u.empid) === inputId);
+            const inputNameKey = String(state.user.name || "").trim().toLowerCase();
+            const inputPhoneKey = normalizePhone(state.user.phone);
+            const inputEmpidKey = normalizeId(state.user.empid);
+            const isGuestId = String(state.user.empid).startsWith('GUEST_');
+
+            const playerIdx = state.leaderboard.findIndex(u => {
+                if (!isGuestId) return normalizeId(u.empid) === inputEmpidKey;
+                return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
+            });
+
             if (playerIdx === -1) return;
             const currentRank = playerIdx + 1;
 
@@ -1019,7 +1126,13 @@
             dom.tower.innerHTML = '';
             state.leaderboard.forEach((entry, idx) => {
                 const rank = idx + 1;
-                const isPlayer = normalizeId(entry.empid) === inputId;
+                let isPlayer = false;
+                if (!isGuestId) {
+                    isPlayer = normalizeId(entry.empid) === inputEmpidKey;
+                } else {
+                    isPlayer = String(entry.name || "").trim().toLowerCase() === inputNameKey &&
+                               normalizePhone(entry.phone) === inputPhoneKey;
+                }
                 const row = document.createElement('div');
                 row.className = `w-full flex items-center justify-between px-4 py-3 border-b border-blue-200 transition-all duration-500 ${isPlayer ? 'bg-blue-800 text-white shadow-xl z-10 scale-105 rounded-xl my-2' : 'bg-white/50 text-slate-900 border-l-4 border-l-transparent'}`;
                 if (!isPlayer && rank <= 3) row.classList.replace('border-l-transparent', 'border-l-yellow-400');
@@ -1028,7 +1141,7 @@
                     <div class="flex items-center gap-2 max-w-[240px]">
                         <span class="font-bold text-[10px] shrink-0 ${isPlayer ? 'text-yellow-300' : (rank <= 3 ? 'text-yellow-600' : 'text-blue-700')}">#${rank}</span>
                         <span class="font-medium text-xs leading-tight ${isPlayer ? 'text-white' : 'text-slate-900'}">
-                            ${isPlayer ? 'คุณ (' + entry.name + ')' : entry.name}${entry.unit ? ' (' + entry.unit + ')' : ''}
+                            ${isPlayer ? 'คุณ ' + entry.name : entry.name}${entry.unit ? ' (' + entry.unit + ')' : ''}
                         </span>
                     </div>
                     <span class="font-black text-xs min-w-[60px] text-right ${isPlayer ? 'text-yellow-200' : 'text-blue-900'}">${(entry.score || 0).toLocaleString()}</span>
@@ -1082,8 +1195,9 @@
             data.append('name', state.user.name);
             data.append('empid', state.user.empid);
             data.append('unit', state.user.unit);
-            data.append('dept', state.user.dept);
             data.append('phone', state.user.phone);
+            data.append('level', state.user.level || "");
+            data.append('line', state.user.line || "");
             data.append('score', String(finalScore));
 
             // Append 10 survey columns individually
@@ -1117,13 +1231,23 @@
                 const res = await fetch(SCRIPT_URL);
                 const data = await res.json();
                 
-                // Optimistic UI Merge: 
-                // Ensure the current user's best score from the local session is reflected 
-                // even if the server is still processing the recent submission.
-                const localIdx = state.leaderboard.findIndex(u => u.empid === state.user.empid);
+                // Optimistic UI Merge:  - Performance Optimized Tiered Logic
+                const inputNameKey = String(state.user.name || "").trim().toLowerCase();
+                const inputPhoneKey = normalizePhone(state.user.phone);
+                const inputEmpidKey = normalizeId(state.user.empid);
+                const isGuestId = String(state.user.empid).startsWith('GUEST_');
+
+                const localIdx = state.leaderboard.findIndex(u => {
+                    if (!isGuestId) return normalizeId(u.empid) === inputEmpidKey;
+                    return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
+                });
                 const localBest = localIdx !== -1 ? state.leaderboard[localIdx].score : Math.floor(state.score);
                 
-                const serverUserIdx = data.findIndex(u => u.empid === state.user.empid);
+                const serverUserIdx = data.findIndex(u => {
+                    if (!isGuestId) return normalizeId(u.empid) === inputEmpidKey;
+                    return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
+                });
+
                 if (serverUserIdx !== -1) {
                     data[serverUserIdx].score = Math.max(data[serverUserIdx].score || 0, localBest);
                 } else {
@@ -1131,7 +1255,9 @@
                         name: state.user.name,
                         empid: state.user.empid,
                         unit: state.user.unit,
-                        dept: state.user.dept,
+                        phone: state.user.phone,
+                        level: state.user.level,
+                        line: state.user.line,
                         score: localBest
                     });
                 }
@@ -1139,10 +1265,17 @@
                 dom.leaderboardBody.innerHTML = '';
                 data.sort((a, b) => b.score - a.score).forEach((row, i) => {
                     const tr = document.createElement('tr');
-                    const isPlayer = row.empid === state.user.empid;
+                    const rNameKey = String(row.name || "").trim().toLowerCase();
+                    const rPhoneKey = normalizePhone(row.phone);
+                    const rEmpidKey = normalizeId(row.empid);
+
+                    let isPlayer = false;
+                    if (!isGuestId) isPlayer = rEmpidKey === inputEmpidKey;
+                    else isPlayer = rNameKey === inputNameKey && rPhoneKey === inputPhoneKey;
+
                     tr.className = `border-b border-blue-50 hover:bg-blue-50/50 transition-colors ${isPlayer ? 'bg-blue-50 font-bold' : ''}`;
                     const displayName = row.name + (row.unit ? ` (${row.unit})` : "");
-                    tr.innerHTML = `<td class="p-4 font-black text-blue-600">${i + 1}</td><td class="p-4 font-normal text-slate-800">${displayName}</td><td class="p-4 hidden md:table-cell text-xs text-slate-500">${row.dept || "-"}</td><td class="p-4 text-right font-black text-blue-900">${(row.score || 0).toLocaleString()}</td>`;
+                    tr.innerHTML = `<td class="p-4 font-black text-blue-600">${i + 1}</td><td class="p-4 font-normal text-slate-800">${displayName}</td><td class="p-4 hidden md:table-cell text-xs text-slate-500">${row.unit || "-"}</td><td class="p-4 text-right font-black text-blue-900">${(row.score || 0).toLocaleString()}</td>`;
                     dom.leaderboardBody.appendChild(tr);
                 });
             } catch (err) { dom.leaderboardBody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500">เชื่อมต่อไม่ได้</td></tr>'; }
@@ -1155,14 +1288,16 @@
                 dom.qVersion.classList.replace('text-slate-300', 'text-blue-400');
             }
             checkForUpdates();
+            startLeaderboardFetch(); // Start loading leaderboard data early
             const savedUser = localStorage.getItem('csp_user_2026');
             if (savedUser) {
                 const u = JSON.parse(savedUser);
                 document.getElementById('reg-name').value = u.name || '';
                 document.getElementById('reg-empid').value = u.empid || '';
                 document.getElementById('reg-unit').value = u.unit || '';
-                document.getElementById('reg-dept').value = u.dept || '';
                 document.getElementById('reg-phone').value = u.phone || '';
+                if (u.level) document.getElementById('reg-level').value = u.level;
+                if (u.line) document.getElementById('reg-line').value = u.line;
             }
             dom.playAgain.onclick = () => location.reload();
             dom.viewRank.onclick = openLeaderboard;
