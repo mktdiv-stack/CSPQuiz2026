@@ -322,15 +322,15 @@
             </div>
 
             <!-- Mobile Mini Leaderboard (Visible only on phones) -->
-            <div id="mobile-mini-leaderboard" class="md:hidden flex flex-col gap-1.5 mb-6 py-2 flex-grow overflow-hidden">
+            <div id="mobile-mini-leaderboard" class="md:hidden flex flex-col gap-1.5 mb-2 py-2 overflow-hidden">
                 <!-- Rows injected here -->
             </div>
 
             <!-- Quiz Content -->
-            <div id="quiz-wrapper" class="flex flex-col justify-end md:justify-center animate__animated">
-                <div class="mb-2 md:mb-3">
+            <div id="quiz-wrapper" class="flex flex-col justify-start md:justify-center animate__animated">
+                <div class="mb-3">
                     <div id="question-box"
-                        class="text-base md:text-lg font-semibold leading-relaxed text-slate-800 bg-blue-50/50 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-blue-100 shadow-sm text-center">
+                        class="text-base md:text-lg font-bold leading-relaxed text-slate-800 bg-white p-4 md:p-4 rounded-2xl md:rounded-3xl border-2 border-blue-500 shadow-xl text-center ring-4 ring-blue-50">
                         Now loading...
                     </div>
                 </div>
@@ -1022,7 +1022,7 @@
                 const options = currentQ.o || [];
                 [...options].sort(() => Math.random() - 0.5).forEach(opt => {
                     const btn = document.createElement('button');
-                    btn.className = "option-btn w-full text-left p-3 md:p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 hover:text-blue-600 hover:border-blue-300 animate__animated animate__fadeInUp";
+                    btn.className = "option-btn w-full text-left p-3.5 md:p-3.5 bg-white border-2 border-slate-100 rounded-2xl font-semibold text-slate-700 hover:text-blue-600 hover:border-blue-500 shadow-sm hover:shadow-md animate__animated animate__fadeInUp";
                     btn.innerText = opt;
                     btn.onclick = (e) => {
                         if (state.isAnswering) return;
