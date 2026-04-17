@@ -321,8 +321,13 @@
                 </div>
             </div>
 
+            <!-- Mobile Mini Leaderboard (Visible only on phones) -->
+            <div id="mobile-mini-leaderboard" class="md:hidden flex flex-col gap-1.5 mb-6 py-2 flex-grow overflow-hidden">
+                <!-- Rows injected here -->
+            </div>
+
             <!-- Quiz Content -->
-            <div id="quiz-wrapper" class="flex-grow flex flex-col justify-center animate__animated">
+            <div id="quiz-wrapper" class="flex flex-col justify-end md:justify-center animate__animated">
                 <div class="mb-2 md:mb-3">
                     <div id="question-box"
                         class="text-base md:text-lg font-semibold leading-relaxed text-slate-800 bg-blue-50/50 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-blue-100 shadow-sm text-center">
@@ -693,6 +698,9 @@
             closeLeaderboard: document.getElementById('close-leaderboard'),
             qVersion: document.getElementById('q-version-tag'),
             appContainer: document.getElementById('game-app'),
+            rankCountMobile: document.getElementById('rank-count-mobile'),
+            rankTagMobile: document.getElementById('rank-tag-mobile'),
+            mobileMiniLeaderboard: document.getElementById('mobile-mini-leaderboard'),
             towerContent: document.getElementById('tower-content'),
             confetti: document.getElementById('confetti-canvas'),
             surveyModal: document.getElementById('survey-modal'),
@@ -1126,7 +1134,7 @@
             if (playerIdx === -1) return;
             const currentRank = playerIdx + 1;
 
-            // Update Mobile Rank Display (Direct access for reliability)
+            // Update Mobile Rank Display (Badge)
             const mobileRankCount = document.getElementById('rank-count-mobile');
             const mobileRankTag = document.getElementById('rank-tag-mobile');
             if (mobileRankCount && mobileRankTag) {
@@ -1140,6 +1148,37 @@
                         mobileRankTag.classList.add('animate__bounce');
                     }
                 }
+            }
+
+            // Update Mobile Mini Leaderboard (Table in the middle)
+            if (dom.mobileMiniLeaderboard) {
+                dom.mobileMiniLeaderboard.innerHTML = '';
+                
+                // Show Top 3 + Current Player + 1 Neighbor (if player is not in top 3)
+                const miniList = [];
+                state.leaderboard.forEach((u, i) => {
+                    const rank = i + 1;
+                    let isPlayer = false;
+                    if (!isGuestId) isPlayer = normalizeId(u.empid) === inputEmpidKey;
+                    else isPlayer = String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
+
+                    if (rank <= 3 || isPlayer) {
+                        miniList.push({ ...u, rank, isPlayer });
+                    }
+                });
+
+                miniList.sort((a,b) => a.rank - b.rank).forEach(entry => {
+                    const row = document.createElement('div');
+                    row.className = `flex items-center justify-between px-4 py-2 rounded-xl transition-all duration-500 ${entry.isPlayer ? 'bg-blue-600 text-white shadow-md scale-105 z-10' : 'bg-blue-50/50 text-slate-600 grayscale-[0.5] opacity-80'}`;
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-xs ${entry.isPlayer ? 'text-yellow-300' : 'text-blue-400'}">#${entry.rank}</span>
+                            <span class="font-bold text-xs truncate max-w-[150px]">${entry.isPlayer ? 'คุณ (' + entry.name + ')' : entry.name}</span>
+                        </div>
+                        <span class="font-black text-xs">${(entry.score || 0).toLocaleString()}</span>
+                    `;
+                    dom.mobileMiniLeaderboard.appendChild(row);
+                });
             }
 
             // Re-render Leaderboard Rows
