@@ -240,6 +240,34 @@
             left: 0;
             right: 0;
         }
+
+        /* --- Video Modal Styles --- */
+        .video-container {
+            position: relative;
+            width: 267px;
+            /* Exact width from Facebook */
+            height: 476px;
+            /* Exact height from Facebook */
+            max-width: 100%;
+            /* Ensure it doesn't overflow horizontally */
+            max-height: 65vh;
+            /* Responsive height limit */
+            aspect-ratio: 267 / 476;
+            margin: 0 auto;
+            border-radius: 1rem;
+            background: #000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-container iframe {
+            width: 267px !important;
+            height: 476px !important;
+            border: 0;
+        }
     </style>
 </head>
 
@@ -392,7 +420,35 @@
                     </div>
 
                     <button onclick="submitSurvey()"
-                        class="w-full py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-xl transition-all">ยืนยันและเริ่มเล่นเกมส์</button>
+                        class="w-full py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-xl transition-all">ยืนยันและไปขั้นตอนถัดไป</button>
+                </div>
+            </div>
+
+            <!-- Video Overlay -->
+            <div id="video-modal"
+                class="absolute inset-0 bg-white z-[128] flex flex-col items-center p-4 md:p-8 text-center animate__animated hidden overflow-y-auto">
+                <div class="w-full max-w-2xl mx-auto py-4 flex flex-col h-full bg-white">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-900 mb-2">ทำความรู้จักกลุ่มลูกค้ากันก่อน 💧
+                    </h2>
+                    <p class="text-slate-500 mb-6 text-sm">ข้อมูลประกอบการวิเคราะห์ปีงบประมาณ 2569</p>
+
+                    <div class="video-container mb-6 shadow-2xl">
+                        <!-- Facebook Embedded Video Player (Reel) -->
+                        <iframe id="fb-video-player"
+                            src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F4374243219563981%2F&show_text=false&width=267&t=0"
+                            allowfullscreen="true"
+                            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+                    </div>
+
+                    <div class="mt-auto space-y-3 w-full max-w-md mx-auto">
+                        <button onclick="startActualGame()"
+                            class="w-full py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-xl transition-all flex items-center justify-center gap-2">
+                            <span>เริ่มเล่นเกมส์เลย!</span>
+                            <span>🚀</span>
+                        </button>
+                        <p class="text-[10px] text-slate-400 font-medium">คำแนะนำ:
+                            ดูวีดีโอให้จบเพื่อช่วยในการตอบคำถามได้แม่นยำขึ้น</p>
+                    </div>
                 </div>
             </div>
 
@@ -664,7 +720,7 @@
                 .catch(err => {
                     console.warn("Background fetch failed:", err);
                     state.leaderboardLoaded = true; // Mark as done to unblock UI
-                    return []; 
+                    return [];
                 });
         };
 
@@ -701,7 +757,8 @@
             confetti: document.getElementById('confetti-canvas'),
             surveyModal: document.getElementById('survey-modal'),
             surveyOptions: document.getElementById('survey-options'),
-            loadingModal: document.getElementById('loading-modal')
+            loadingModal: document.getElementById('loading-modal'),
+            videoModal: document.getElementById('video-modal')
         };
         const ctx = dom.confetti.getContext('2d');
         let particles = [];
@@ -786,10 +843,10 @@
 
             try {
                 const startTime = Date.now();
-                if (!leaderboardPromise) startLeaderboardFetch(); 
+                if (!leaderboardPromise) startLeaderboardFetch();
                 const leaderboard = await leaderboardPromise;
                 console.log(`Fetch wait time: ${Date.now() - startTime}ms`);
-                
+
                 state.leaderboard = leaderboard || [];
                 if (bypassTimer) clearTimeout(bypassTimer);
 
@@ -800,7 +857,7 @@
 
                 const hasPlayed = state.leaderboard.some(entry => {
                     const sheetEmpid = normalizeId(entry.empid);
-                    
+
                     // 1. If Employee ID was provided, it's the primary key
                     if (empid) {
                         return sheetEmpid === inputEmpidKey;
@@ -845,7 +902,7 @@
                 "เคยเห็น จาก Intranet",
                 "เคยเห็น จาก บอร์ดประชาสัมพันธ์",
                 "ได้ยิน จาก เสียงตามสาย",
-                "ไม่เคยเห็น"
+                "เห็นครั้งแรกที่นี่แหละ"
             ];
 
             dom.surveyOptions.innerHTML = '';
@@ -904,9 +961,28 @@
 
         function proceedToStart() {
             dom.regModal.classList.add('animate__fadeOutDown');
-            if (soundEnabled && !bgmTimeout) startBGM();
             setTimeout(() => {
                 dom.regModal.classList.add('hidden');
+                showVideoModal();
+            }, 500);
+        }
+
+        function showVideoModal() {
+            dom.videoModal.classList.remove('hidden');
+            dom.videoModal.classList.add('animate__fadeInUp');
+        }
+
+        function startActualGame() {
+            // Stop video by resetting src or just hiding
+            const iframe = document.getElementById('fb-video-player');
+            const currentSrc = iframe.src;
+            iframe.src = ''; // Force stop
+            iframe.src = currentSrc; // Reset for next time
+
+            dom.videoModal.classList.add('animate__fadeOutDown');
+            if (soundEnabled && !bgmTimeout) startBGM();
+            setTimeout(() => {
+                dom.videoModal.classList.add('hidden');
                 startGame();
             }, 500);
         }
@@ -1149,7 +1225,7 @@
             // Update Mobile Mini Leaderboard (Table in the middle)
             if (dom.mobileMiniLeaderboard) {
                 dom.mobileMiniLeaderboard.innerHTML = '';
-                
+
                 // Show Top 3 + Current Player + 1 Neighbor (if player is not in top 3)
                 const miniList = [];
                 state.leaderboard.forEach((u, i) => {
@@ -1163,7 +1239,7 @@
                     }
                 });
 
-                miniList.sort((a,b) => a.rank - b.rank).forEach(entry => {
+                miniList.sort((a, b) => a.rank - b.rank).forEach(entry => {
                     const row = document.createElement('div');
                     row.className = `flex items-center justify-between px-4 py-2 rounded-xl transition-all duration-500 ${entry.isPlayer ? 'bg-blue-600 text-white shadow-md scale-105 z-10' : 'bg-blue-50/50 text-slate-600 grayscale-[0.5] opacity-80'}`;
                     row.innerHTML = `
@@ -1186,7 +1262,7 @@
                     isPlayer = normalizeId(entry.empid) === inputEmpidKey;
                 } else {
                     isPlayer = String(entry.name || "").trim().toLowerCase() === inputNameKey &&
-                               normalizePhone(entry.phone) === inputPhoneKey;
+                        normalizePhone(entry.phone) === inputPhoneKey;
                 }
                 const row = document.createElement('div');
                 row.className = `w-full flex items-center justify-between px-4 py-3 border-b border-blue-200 transition-all duration-500 ${isPlayer ? 'bg-blue-800 text-white shadow-xl z-10 scale-105 rounded-xl my-2' : 'bg-white/50 text-slate-900 border-l-4 border-l-transparent'}`;
@@ -1285,7 +1361,7 @@
             try {
                 const res = await fetch(SCRIPT_URL);
                 const data = await res.json();
-                
+
                 // Optimistic UI Merge:  - Performance Optimized Tiered Logic
                 const inputNameKey = String(state.user.name || "").trim().toLowerCase();
                 const inputPhoneKey = normalizePhone(state.user.phone);
@@ -1297,7 +1373,7 @@
                     return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
                 });
                 const localBest = localIdx !== -1 ? state.leaderboard[localIdx].score : Math.floor(state.score);
-                
+
                 const serverUserIdx = data.findIndex(u => {
                     if (!isGuestId) return normalizeId(u.empid) === inputEmpidKey;
                     return String(u.name || "").trim().toLowerCase() === inputNameKey && normalizePhone(u.phone) === inputPhoneKey;
