@@ -241,6 +241,29 @@
             right: 0;
         }
 
+        @keyframes pulse-border {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+                border-color: #3b82f6;
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        .btn-pulse {
+            animation: pulse-border 2s infinite;
+            border-width: 2px !important;
+        }
+
         /* --- Video Modal Styles --- */
         .video-container {
             position: relative;
@@ -462,19 +485,44 @@
 
             <!-- End Screen Overlay -->
             <div id="end-screen"
-                class="hidden absolute inset-0 bg-white z-[110] flex flex-col items-center justify-center p-8 text-center animate__animated">
-                <div id="end-icon" class="text-7xl mb-6">🏆</div>
-                <h2 id="end-title" class="text-4xl font-black text-slate-900 mb-2">ภารกิจสำเร็จ!</h2>
-                <div class="bg-blue-50 rounded-3xl p-8 mb-8 w-full max-w-sm border border-blue-100">
-                    <p class="text-blue-600 font-bold uppercase tracking-widest text-xs mb-1">คะแนนรวมสูงสุด</p>
-                    <p id="final-score" class="text-6xl font-black text-blue-900 mb-2">0</p>
-                    <p class="text-slate-500 text-xs text-blue-400 font-bold">สู้ๆนะ</p>
-                </div>
-                <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
-                    <button id="play-again"
-                        class="py-4 bg-white border-2 border-blue-600 text-blue-600 font-black rounded-xl hover:bg-blue-50 transition-all">เล่นอีกครั้ง</button>
-                    <button id="view-rank"
-                        class="py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-xl transition-all">ดูอันดับ</button>
+                class="hidden absolute inset-0 bg-white z-[110] flex flex-col items-center p-6 md:p-8 text-center animate__animated overflow-y-auto">
+                <div class="my-auto w-full max-w-sm flex flex-col items-center">
+
+                    <div id="end-icon" class="text-6xl md:text-7xl mb-4 md:mb-6">🏆</div>
+                    <h2 id="end-title" class="text-3xl md:text-4xl font-black text-slate-900 mb-2">ภารกิจสำเร็จ!</h2>
+
+                    <div class="bg-blue-50 rounded-3xl p-6 md:p-8 mb-6 w-full border border-blue-100 shadow-inner">
+                        <p class="text-blue-600 font-bold uppercase tracking-widest text-xs mb-1">คะแนนรวมสูงสุด</p>
+                        <p id="final-score" class="text-5xl md:text-6xl font-black text-blue-900 mb-2">0</p>
+                        <p
+                            class="text-slate-500 text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-tighter">
+                            MWA CSP EXPERT</p>
+                    </div>
+
+                    <!-- ทบทวนข้อมูลก่อนเล่นใหม่ -->
+                    <div class="w-full mb-6 text-left">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-2">💡 ทบทวนข้อมูล
+                            CSP 69</p>
+
+                        <a href="http://intra.mwa.co.th//download/spp0501/Marketing/CSP%20Dashboard/Customer%20Segment%20Profile%20Report.html"
+                            target="_blank"
+                            class="btn-pulse flex items-center justify-center gap-2 w-full py-3 bg-blue-600 text-white rounded-xl font-black text-sm mb-4 shadow-xl">
+                            📊 เข้าชม CSP Dashboard (Intranet)
+                        </a>
+
+                        <div
+                            class="rounded-2xl border-2 border-slate-100 overflow-hidden shadow-md hover:shadow-xl transition-all">
+                            <img src="csp_info69.png" alt="CSP Info" class="w-full h-auto cursor-zoom-in"
+                                onclick="window.open(this.src)">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 md:gap-4 w-full">
+                        <button id="play-again"
+                            class="py-4 bg-white border-2 border-blue-600 text-blue-600 font-black rounded-xl hover:bg-blue-50 transition-all text-sm md:text-base">เล่นอีกครั้ง</button>
+                        <button id="view-rank"
+                            class="py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-xl transition-all text-sm md:text-base">ดูอันดับ</button>
+                    </div>
                 </div>
             </div>
 
@@ -1314,7 +1362,7 @@
             dom.appContainer.classList.remove('tension-shake', 'tension-red');
             dom.endScreen.classList.remove('hidden');
             dom.endIcon.innerText = isWin ? '🏆' : '🚨';
-            dom.endTitle.innerText = isWin ? 'ภารกิจสำเร็จ!' : 'ละลายหมดเลยใจ';
+            dom.endTitle.innerText = isWin ? 'ภารกิจสำเร็จ!' : 'อย่ายอมแพ้ ไปหาข้อมูลแล้วเล่นใหม่อีกครั้ง!!';
             dom.finalScoreDisplay.innerText = Math.floor(state.score).toLocaleString();
             // REMOVED: dom.finalFloorsDisplay.innerText = state.floor - 1; (Bug: final-floors element missing)
             submitScore(Math.floor(state.score));
