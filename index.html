@@ -267,10 +267,10 @@
         /* --- Video Modal Styles --- */
         .video-container {
             position: relative;
-            width: 85vw;
-            max-width: 320px;
+            width: auto;
+            height: 65vh;
+            max-height: 500px;
             aspect-ratio: 267 / 476;
-            max-height: 70vh;
             margin: 0 auto;
             border-radius: 1.5rem;
             background: #000;
@@ -279,6 +279,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .video-container iframe {
@@ -445,7 +446,7 @@
             <!-- Video Overlay -->
             <div id="video-modal"
                 class="absolute inset-0 bg-white z-[128] flex flex-col items-center p-4 md:p-8 text-center animate__animated hidden overflow-y-auto">
-                <div class="w-full max-w-2xl mx-auto py-4 flex flex-col h-full bg-white">
+                <div class="w-full max-w-2xl mx-auto py-4 flex flex-col bg-white">
                     <h2 class="text-xl md:text-2xl font-black text-slate-900 mb-2">ทำความรู้จักกลุ่มลูกค้ากันก่อน 💧
                     </h2>
                     <p class="text-slate-500 mb-6 text-sm">ข้อมูลประกอบการวิเคราะห์ปีงบประมาณ 2569</p>
